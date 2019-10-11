@@ -19,8 +19,8 @@
 
 ## Dependencies
 
-| name              | version         | link                                         |
-| ----------------- | --------------- | -------------------------------------------- |
-| react-table       | ^7.0.0-beta.12, | https://github.com/tannerlinsley/react-table |
-| styled-components | ^4.4.0,         |                                              |
-| typescript        | ^3.6.3          |                                              |
+| name              | version        | link                                         |
+| ----------------- | -------------- | -------------------------------------------- |
+| react-table       | ^7.0.0-beta.12 | https://github.com/tannerlinsley/react-table |
+| styled-components | ^4.4.0         |                                              |
+| typescript        | ^3.6.3         |                                              |
