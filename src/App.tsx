@@ -14,7 +14,9 @@ import {
   ColumnInstance,
   useBlockLayout,
   useResizeColumns,
-  UseResizeColumnsHeaderProps
+  UseResizeColumnsHeaderProps,
+  UsePaginationInstanceProps,
+  UsePaginationState
 } from 'react-table'
 import styled from 'styled-components'
 import makeData from './makeData'
@@ -31,6 +33,11 @@ interface TableColumn<D extends object = {}>
     UseSortByColumnProps<D>,
     UseResizeColumnsHeaderProps<D>,
     UseFiltersColumnProps<D> {}
+
+interface TablePaginationState<D extends object = {}> extends TableInstance<D> {
+  state: UsePaginationState<D>
+}
+interface TableInstancePaginate<D extends object = {}> extends UsePaginationInstanceProps<D>, TablePaginationState<D> {}
 
 const Rigth = styled.div`
   text-align: right;
@@ -126,7 +133,25 @@ const defaultColumn = {
 
 const Table: FC<Props> = ({ columns, data }) => {
   // Use the state and functions returned from useTable to build your UI
-  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable<Data>(
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    prepareRow,
+    page, // Instead of using 'rows', we'll use page,
+    // which has only the rows for the active page
+
+    // The rest of these things are super handy, too ;)
+    canPreviousPage,
+    canNextPage,
+    pageOptions,
+    pageCount,
+    gotoPage,
+    nextPage,
+    previousPage,
+    setPageSize,
+    state: { pageIndex, pageSize }
+  } = useTable<Data>(
     {
       columns,
       defaultColumn,
@@ -135,8 +160,9 @@ const Table: FC<Props> = ({ columns, data }) => {
     useFilters,
     useSortBy,
     useBlockLayout,
-    useResizeColumns
-  )
+    useResizeColumns,
+    usePagination
+  ) as TableInstancePaginate<object>
   // Render the UI for your table
   return (
     <TableWrap {...getTableProps()}>
@@ -159,7 +185,7 @@ const Table: FC<Props> = ({ columns, data }) => {
         ))}
       </TableHead>
       <TableBody {...getTableBodyProps()}>
-        {rows.map((row, i) => {
+        {page.map((row, i) => {
           prepareRow(row)
           return (
             <TableRow {...row.getRowProps()}>
@@ -170,6 +196,50 @@ const Table: FC<Props> = ({ columns, data }) => {
           )
         })}
       </TableBody>
+      <div className="pagination">
+        <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+          {'<<'}
+        </button>{' '}
+        <button onClick={() => previousPage()} disabled={!canPreviousPage}>
+          {'<'}
+        </button>{' '}
+        <button onClick={() => nextPage()} disabled={!canNextPage}>
+          {'>'}
+        </button>{' '}
+        <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
+          {'>>'}
+        </button>{' '}
+        <span>
+          Page{' '}
+          <strong>
+            {pageIndex + 1} of {pageOptions.length}
+          </strong>{' '}
+        </span>
+        <span>
+          | Go to page:{' '}
+          <input
+            type="number"
+            defaultValue={pageIndex + 1}
+            onChange={e => {
+              const page = e.target.value ? Number(e.target.value) - 1 : 0
+              gotoPage(page)
+            }}
+            style={{ width: '100px' }}
+          />
+        </span>{' '}
+        <select
+          value={pageSize}
+          onChange={e => {
+            setPageSize(Number(e.target.value))
+          }}
+        >
+          {[10, 20, 30, 40, 50].map(pageSize => (
+            <option key={pageSize} value={pageSize}>
+              Show {pageSize}
+            </option>
+          ))}
+        </select>
+      </div>
     </TableWrap>
   )
 }
